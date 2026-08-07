@@ -1,0 +1,4 @@
+# Blank issues are disabled: this project's prime rule is that no work happens
+# without an issue carrying a milestone and at least one label, and a blank issue
+# is how that rule gets skipped.
+blank_issues_enabled: false
