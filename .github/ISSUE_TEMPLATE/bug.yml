@@ -1,0 +1,100 @@
+name: Bug
+description: Something is broken
+labels: ["type/bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A bug report without reproduction steps is a rumour. Fill in all three of
+        steps, actual and expected.
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered, starting from a known state.
+      value: |
+        1. Start from an empty list
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happens. Include the exact error text or console output if there is any.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: >
+        A fix is not done without a regression test that fails against the old
+        behaviour. That line is pre-filled and should stay.
+      value: |
+        - [ ] The steps above produce the expected behaviour
+        - [ ] A regression test covers this and fails against the old behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where the fault lives. An `area/*` label will be applied to match.
+      options:
+        - ui — React components and styling
+        - state — application state and data model
+        - build — Vite, TypeScript, bundling
+        - ci — GitHub Actions and automation
+        - workflow — Claude Code setup, agents, hooks, process
+        - docs — README, ADRs, guides
+        - testing — Vitest and coverage
+        - a11y — accessibility
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - M0 Foundation
+        - M1 Core Todo CRUD
+        - M2 Persistence
+        - M3 UX
+        - M4 Quality and Release
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - p0 — critical, blocks everything
+        - p1 — high, next up
+        - p2 — normal
+        - p3 — low, nice to have
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Chrome 141 on macOS 15; or: npm run dev, Node 24"
+    validations:
+      required: false

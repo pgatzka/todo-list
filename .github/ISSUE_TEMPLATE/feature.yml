@@ -1,0 +1,102 @@
+name: Feature
+description: A new user-facing capability
+labels: ["type/feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Name the **outcome**, not the activity. "Todos persist across reloads",
+        not "work on storage".
+
+        A milestone is required before work can start. If you cannot set one
+        yourself, say which it belongs to in Context and it will be applied.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this matters now. Skip if self-evident.
+      placeholder: The list is lost on every reload, which makes the app unusable beyond a single session.
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is in — and, just as importantly, what is deliberately out.
+      placeholder: |
+        In: persisting todos to browser storage, restoring on load.
+        Out: cross-device sync, server-side storage.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: >
+        Verifiable outcomes, each checkable by someone who did not write the code.
+        "Storage works properly" is not verifiable. "Reloading restores the exact
+        list including completed state" is.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where this lands. An `area/*` label will be applied to match.
+      options:
+        - ui — React components and styling
+        - state — application state and data model
+        - build — Vite, TypeScript, bundling
+        - ci — GitHub Actions and automation
+        - workflow — Claude Code setup, agents, hooks, process
+        - docs — README, ADRs, guides
+        - testing — Vitest and coverage
+        - a11y — accessibility
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      description: Every issue belongs to exactly one.
+      options:
+        - M0 Foundation
+        - M1 Core Todo CRUD
+        - M2 Persistence
+        - M3 UX
+        - M4 Quality and Release
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated size
+      description: An `xl` issue should probably be split before work starts.
+      options:
+        - xs — under 1h
+        - s — 1-3h
+        - m — half a day
+        - l — 1-2 days
+        - xl — should probably be split
+    validations:
+      required: false
+
+  - type: input
+    id: links
+    attributes:
+      label: Related issues
+      description: >
+        Parent epic, blockers, or issues this unblocks. These get recorded as real
+        sub-issue and dependency links, not just prose.
+      placeholder: "parent #1, blocked by #3"
+    validations:
+      required: false

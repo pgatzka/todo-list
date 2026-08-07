@@ -1,0 +1,90 @@
+name: Chore
+description: Maintenance, tooling, dependencies, refactoring, docs or tests
+labels: ["type/chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For work with no new user-facing capability. Pick the right `type/*` below —
+        the form applies `type/chore` by default, and it will be swapped if you
+        choose otherwise.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - chore — maintenance, tooling, dependencies
+        - refactor — internal change, no behaviour change
+        - docs — documentation only
+        - test — tests and test infrastructure
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What changes, and what deliberately does not.
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why now
+      description: >
+        Maintenance work competes with features for attention. What makes this
+        worth doing at this point rather than later?
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: >
+        For a refactor, "behaviour is unchanged and the existing suite still passes"
+        is a legitimate line — but say which suite.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - ui — React components and styling
+        - state — application state and data model
+        - build — Vite, TypeScript, bundling
+        - ci — GitHub Actions and automation
+        - workflow — Claude Code setup, agents, hooks, process
+        - docs — README, ADRs, guides
+        - testing — Vitest and coverage
+        - a11y — accessibility
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - M0 Foundation
+        - M1 Core Todo CRUD
+        - M2 Persistence
+        - M3 UX
+        - M4 Quality and Release
+    validations:
+      required: true
+
+  - type: input
+    id: links
+    attributes:
+      label: Related issues
+      placeholder: "parent #1, blocked by #3"
+    validations:
+      required: false
