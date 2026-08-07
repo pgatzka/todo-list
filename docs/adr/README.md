@@ -7,8 +7,8 @@ still hold.
 
 ## Index
 
-| ADR | Title | Status | Date |
-| --- | --- | --- | --- |
+| ADR                                       | Title                                                      | Status   | Date       |
+| ----------------------------------------- | ---------------------------------------------------------- | -------- | ---------- |
 | [0001](ADR-0001-typescript-react-vite.md) | Build the todo application with TypeScript, React and Vite | Accepted | 2026-08-07 |
 
 ## Writing one
@@ -20,7 +20,7 @@ Four sections, all of them required:
 
 - **Context** — the forces at play, so a reader understands why this was a question
 - **Decision** — what is chosen, active voice, one decision per record
-- **Consequences** — what it makes easy *and* what it makes hard
+- **Consequences** — what it makes easy _and_ what it makes hard
 - **Alternatives considered** — each with the specific reason it lost
 
 ## Rules

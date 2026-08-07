@@ -45,7 +45,7 @@ This is the step that gets skipped. Before you finish, ask three questions about
 2. **Does something have to land first?** → record a blocked-by dependency.
 3. **Does it unblock something else?** → record the dependency from the other side.
 
-The installed `gh` has no native command for either relationship. Use the API directly — note both take the *database id*, not the issue number:
+The installed `gh` has no native command for either relationship. Use the API directly — note both take the _database id_, not the issue number:
 
 ```bash
 # Sub-issue: attach child to parent epic

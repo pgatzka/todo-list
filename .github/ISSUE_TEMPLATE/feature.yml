@@ -1,6 +1,6 @@
 name: Feature
 description: A new user-facing capability
-labels: ["type/feature"]
+labels: ['type/feature']
 body:
   - type: markdown
     attributes:
@@ -97,6 +97,6 @@ body:
       description: >
         Parent epic, blockers, or issues this unblocks. These get recorded as real
         sub-issue and dependency links, not just prose.
-      placeholder: "parent #1, blocked by #3"
+      placeholder: 'parent #1, blocked by #3'
     validations:
       required: false

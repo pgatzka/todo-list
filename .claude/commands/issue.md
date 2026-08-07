@@ -33,6 +33,7 @@ Delegate to the `issue-manager` agent.
    - Does it unblock something already open? Record that from the other side.
 
    Both relationships need the database id, not the issue number:
+
    ```bash
    CHILD_ID=$(gh api repos/{owner}/{repo}/issues/<child-nr> --jq '.id')
    gh api --method POST repos/{owner}/{repo}/issues/<parent-nr>/sub_issues -F sub_issue_id=$CHILD_ID
@@ -40,6 +41,7 @@ Delegate to the `issue-manager` agent.
    BLOCKER_ID=$(gh api repos/{owner}/{repo}/issues/<blocker-nr> --jq '.id')
    gh api --method POST repos/{owner}/{repo}/issues/<nr>/dependencies/blocked_by -F issue_id=$BLOCKER_ID
    ```
+
 5. If the request is really several pieces of work, propose an epic with sub-issues rather than one oversized issue.
 
 Report the issue number and URL, and state whether to start it now with `/start <nr>`.

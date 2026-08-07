@@ -1,6 +1,6 @@
 name: Chore
 description: Maintenance, tooling, dependencies, refactoring, docs or tests
-labels: ["type/chore"]
+labels: ['type/chore']
 body:
   - type: markdown
     attributes:
@@ -85,6 +85,6 @@ body:
     id: links
     attributes:
       label: Related issues
-      placeholder: "parent #1, blocked by #3"
+      placeholder: 'parent #1, blocked by #3'
     validations:
       required: false

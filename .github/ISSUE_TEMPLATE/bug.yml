@@ -1,6 +1,6 @@
 name: Bug
 description: Something is broken
-labels: ["type/bug"]
+labels: ['type/bug']
 body:
   - type: markdown
     attributes:
@@ -95,6 +95,6 @@ body:
     id: environment
     attributes:
       label: Environment
-      placeholder: "Chrome 141 on macOS 15; or: npm run dev, Node 24"
+      placeholder: 'Chrome 141 on macOS 15; or: npm run dev, Node 24'
     validations:
       required: false

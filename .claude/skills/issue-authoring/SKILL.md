@@ -11,12 +11,12 @@ An issue is a contract. It says what will exist afterwards that does not exist n
 
 Name the **outcome**, not the activity.
 
-| Poor | Better |
-| --- | --- |
-| Work on storage | Todos persist across reloads |
-| Fix bug | Completing a todo no longer clears the filter |
-| Improve UI | Todo list is keyboard-navigable end to end |
-| Add tests | Todo reducer has coverage for every action |
+| Poor            | Better                                        |
+| --------------- | --------------------------------------------- |
+| Work on storage | Todos persist across reloads                  |
+| Fix bug         | Completing a todo no longer clears the filter |
+| Improve UI      | Todo list is keyboard-navigable end to end    |
+| Add tests       | Todo reducer has coverage for every action    |
 
 No prefixes like `[FEATURE]` — that is what `type/*` labels are for.
 
@@ -66,13 +66,13 @@ Every issue needs at least one `type/*` and one `area/*`.
 
 Every issue gets exactly one.
 
-| Milestone | Holds |
-| --- | --- |
-| M0 Foundation | Governance, workflow, scaffold, CI — everything before feature work |
-| M1 Core Todo CRUD | Create, read, update, delete, complete. The minimum usable product |
-| M2 Persistence | Todos survive a reload |
-| M3 UX | Filtering, sorting, keyboard support, accessibility, polish |
-| M4 Quality and Release | Coverage, e2e, build hardening, first tagged release |
+| Milestone              | Holds                                                               |
+| ---------------------- | ------------------------------------------------------------------- |
+| M0 Foundation          | Governance, workflow, scaffold, CI — everything before feature work |
+| M1 Core Todo CRUD      | Create, read, update, delete, complete. The minimum usable product  |
+| M2 Persistence         | Todos survive a reload                                              |
+| M3 UX                  | Filtering, sorting, keyboard support, accessibility, polish         |
+| M4 Quality and Release | Coverage, e2e, build hardening, first tagged release                |
 
 If an issue does not fit any milestone, either it is premature or the milestone set is wrong. Raise it rather than forcing a fit.
 

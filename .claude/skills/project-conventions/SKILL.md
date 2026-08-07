@@ -24,7 +24,7 @@ Always cut from an up-to-date `main` with a clean tree. `main` itself is never w
 - The prefix is mandatory and hook-enforced; the number must match the branch.
 - Imperative mood: "Add", "Fix", "Remove" — not "Added", "Fixes".
 - One logical change per commit. Commit at each meaningful step, not once at the end.
-- Body optional; use it for *why*, never for restating the diff.
+- Body optional; use it for _why_, never for restating the diff.
 - No `Co-Authored-By`, no tool advertising.
 
 ```
@@ -47,7 +47,7 @@ Always cut from an up-to-date `main` with a clean tree. `main` itself is never w
 - One component per file, named the same as the file.
 - Co-locate the test as `Component.test.tsx` beside it.
 - Keep state as local as it can be. Lift only when genuinely shared.
-- Extract a custom hook when logic is reused *or* when it makes a component readable — not speculatively.
+- Extract a custom hook when logic is reused _or_ when it makes a component readable — not speculatively.
 - Semantic HTML first. A real `<button>` before a `<div onClick>`. Always.
 
 ## Comments
@@ -79,7 +79,7 @@ Match the comment density of surrounding code. Delete commented-out code rather 
 
 `docs/adr/ADR-NNNN-short-slug.md`, sequential and zero-padded.
 
-Sections: **Context** (the forces, so a reader sees why this was a question) · **Decision** (active voice) · **Consequences** (what it makes easy *and* hard — the downsides are the point) · **Alternatives considered** (each with the specific reason it lost).
+Sections: **Context** (the forces, so a reader sees why this was a question) · **Decision** (active voice) · **Consequences** (what it makes easy _and_ hard — the downsides are the point) · **Alternatives considered** (each with the specific reason it lost).
 
 Status is `Proposed` until the customer approves, then `Accepted`. Superseded records are never deleted — mark `Superseded by ADR-NNNN` and keep the history.
 
