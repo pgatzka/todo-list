@@ -61,9 +61,12 @@ The forces that matter now:
 This is the new record ADR-0001 asked for, not an amendment to it. What it
 supersedes is that record's architectural claim — that the application is
 client-side only and that persistence is browser storage. The toolchain ADR-0001
-chose is left standing: TypeScript in strict mode, React, Vite, Vitest, React
-Testing Library, Playwright, ESLint and Prettier all carry forward as the
-frontend half of the workspace and are not reopened here. ADR-0001 is marked
+chose is left standing: TypeScript in strict mode, React, Vite, Vitest and React
+Testing Library carry forward as the frontend half of the workspace, and
+Playwright, ESLint and Prettier now cover both halves of it. None of them are
+reopened here. The runtime version is the one thing ADR-0001 decided that this
+record does not carry forward — `package.json` is the authority on it. ADR-0001
+is marked
 `Superseded by ADR-0002` because that is the only status value the template
 offers; the supersession is partial in exactly that way.
 
@@ -81,8 +84,8 @@ What this makes easy:
   this. The browser holds a view of the data instead of owning it.
 - The M3 filtering, sorting and search work can run as SQL against indexes
   rather than as client-side array scans, and stay correct as the list grows
-  past whatever a first page loads. Which of them actually do is left to M3,
-  and for search specifically to #59.
+  past whatever a first page loads. Which of those three move to the server is
+  left to M3, and for search specifically to #59.
 - Drizzle's schema is ordinary TypeScript, so column types flow into the server's
   types without a code generation step, and `drizzle-kit` emits plain SQL
   migrations that are reviewed as SQL in the pull request that adds them.
@@ -150,8 +153,8 @@ be reachable and documented independently of the UI. tRPC's transport is an
 implementation detail rather than an interface — awkward to call with `curl`, and
 the error contract would land in tRPC's own envelope rather than in the single
 documented shape #31 asks for. It would also couple the frontend build to the
-server's
-source tree and to a single TypeScript version across both. The inferred types
+server's source tree and to a single TypeScript version across both. The
+inferred types
 are genuinely better than what we are choosing; they were not worth giving up an
 independently usable API.
 
@@ -179,12 +182,12 @@ either way; Postgres needs a volume just as much. Both engines also have a real
 online backup — `pg_dump` on one side, `.dump` and `VACUUM INTO` on the other.
 What differs is where the procedure runs. `pg_dump` speaks to a service over a
 connection, so the backup job (#50) and the restore drill (#51) are the same
-whether they run on the host, in CI or from a workstation. Every SQLite backup
-path needs the file and a `sqlite3` binary next to the volume, and the obvious
-wrong version — `cp` of a database in WAL mode — silently produces a file that
-restores to a torn state. SQLite's column typing is also by affinity rather than
-strict, which sits badly with a project that leans on static types as its primary
-automated check.
+wherever a connection reaches. Every SQLite path needs local access to the
+database file instead, and the obvious wrong version — `cp` of a database in WAL
+mode — silently produces a file that restores to a torn state. SQLite's column
+typing is also by affinity unless every table is declared `STRICT`, and even then
+the type set has no native date or boolean, which sits badly with a project that
+leans on static types as its primary automated check.
 
 ### A separate repository for the backend
 
