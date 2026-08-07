@@ -7,9 +7,9 @@
 ## Context
 
 [ADR-0001](ADR-0001-typescript-react-vite.md) chose a browser-only single-page
-app. It said, in the alternative it rejected, that if the project ever needed
-shared or cross-device state then that would be a new decision and a new ADR
-rather than an extension of that one. This is that record.
+app. Its Consequences accepted browser storage as the price of that, and said
+that if shared or cross-device state were ever wanted it would be a new decision
+and a new ADR rather than an extension of that one. This is that record.
 
 Two things changed after ADR-0001 was written. The product requirement changed:
 the list has to be usable from a phone and from a desktop and show the same
@@ -26,11 +26,13 @@ The forces that matter now:
   scoped to one browser on one device. There is no arrangement of client-side
   code that makes the same list appear on a second device. This is the
   requirement that forces a server; nothing else here would on its own.
-- **The M3 work is query work.** Filtering by status and by tag together, sorting
-  by due date, priority and creation time, and finding todos by text are
-  operations a relational engine performs against indexes. In the browser they
-  are array scans over whatever happens to have been loaded, and the correctness
-  of the answer depends on all of the data being present.
+- **The M3 work is query work, and only a store makes the option available.**
+  Filtering by status and by tag together, sorting by due date, priority and
+  creation time, and finding todos by text are operations a relational engine
+  performs against indexes. In the browser they are array scans whose
+  correctness depends on all of the data having been loaded. Whether M3
+  actually runs them on the server or in the client is not settled here — #59
+  requires that choice be made and recorded in its own pull request.
 - **The richer todo wants constraints the store can enforce.** Priorities from a
   fixed set, timestamps stored unambiguously, tags related to todos in a defined
   way. A store that enforces types, nullability, defaults and referential
@@ -56,14 +58,14 @@ The forces that matter now:
 > browser talking to the server over a REST API whose request and response types
 > live in a shared TypeScript package.
 
-This extends ADR-0001 rather than replacing it wholesale. TypeScript in strict
-mode, React, Vite, Vitest, React Testing Library, Playwright, ESLint and
-Prettier, and Node 24 all carry forward as the frontend half of the workspace and
-are not reopened here. What this record supersedes is ADR-0001's architectural
-claim — that the application is client-side only and that persistence is browser
-storage. ADR-0001 is marked `Superseded by ADR-0002` because that is the only
-status value the template offers, but the supersession is partial in exactly the
-way described above.
+This is the new record ADR-0001 asked for, not an amendment to it. What it
+supersedes is that record's architectural claim — that the application is
+client-side only and that persistence is browser storage. The toolchain ADR-0001
+chose is left standing: TypeScript in strict mode, React, Vite, Vitest, React
+Testing Library, Playwright, ESLint and Prettier all carry forward as the
+frontend half of the workspace and are not reopened here. ADR-0001 is marked
+`Superseded by ADR-0002` because that is the only status value the template
+offers; the supersession is partial in exactly that way.
 
 Two things are deliberately out of scope for this record. The schema — tables,
 columns, identifiers, how tags are represented, how due timestamps are stored —
@@ -77,9 +79,10 @@ What this makes easy:
 
 - One list, addressable from any device, which is the requirement that started
   this. The browser holds a view of the data instead of owning it.
-- The M3 filtering, sorting and search work becomes SQL against indexes rather
-  than client-side array work, and stays correct as the list grows past whatever
-  a first page loads.
+- The M3 filtering, sorting and search work can run as SQL against indexes
+  rather than as client-side array scans, and stay correct as the list grows
+  past whatever a first page loads. Where each of them actually runs is #59's
+  decision, not this one's.
 - Drizzle's schema is ordinary TypeScript, so column types flow into the server's
   types without a code generation step, and `drizzle-kit` emits plain SQL
   migrations that are reviewed as SQL in the pull request that adds them.
@@ -94,10 +97,11 @@ What this makes easy:
 
 What this makes hard:
 
-- **Nothing runs without a database.** A developer checkout and a CI job both
-  have to start Postgres and apply migrations before a test can run. That is
-  slower and has more failure modes than ADR-0001's loop, and it is a direct cost
-  against the feedback-speed force above.
+- **The integration tests need a database.** A developer checkout and a CI job
+  both have to start Postgres and apply migrations before the endpoint tests
+  (#30) can run. Component tests do not, so the fast inner loop survives, but
+  the full check is slower and has more ways to fail than ADR-0001's, and that
+  is a direct cost against the feedback-speed force above.
 - **Migrations become versioned artefacts and a deploy gate.** Once deployed data
   exists, schema changes are forward-only, have to be reviewed as SQL, have to
   run before the new version starts, and a bad one is recovered from backup
@@ -130,10 +134,11 @@ migrations are generated.
 It lost because the generated client has to exist before anything typechecks.
 That puts a code generation step into the developer loop, the CI job, the
 container build and any clean checkout, and each of those is a place it can be
-forgotten or go stale. Drizzle's schema is TypeScript that the compiler already
-reads, and its migrations are SQL files a reviewer reads directly, where Prisma's
-are produced from a diff of the DSL. For a project whose migration reviewer is a
-person reading a pull request, plain SQL is the more reviewable artefact.
+forgotten or go stale. Drizzle's schema is TypeScript the compiler already
+reads, so the source of truth is the same language as the code querying it
+rather than a second one that has to be translated first. The migrations are not
+the difference: both tools diff a schema and commit the resulting SQL for a
+reviewer to read.
 
 ### tRPC instead of REST with shared types
 
@@ -143,8 +148,8 @@ there is no hand-written contract to drift at all.
 It lost on a requirement, not on ergonomics: the epic (#20) states the API has to
 be reachable and documented independently of the UI. tRPC's transport is an
 implementation detail rather than an interface — awkward to call with `curl`, and
-it does not express itself in the HTTP status codes that the error contract (#31)
-is defined in terms of. It would also couple the frontend build to the server's
+it does not let the error contract be authored in HTTP status codes, which is how
+#31 states it. It would also couple the frontend build to the server's
 source tree and to a single TypeScript version across both. The inferred types
 are genuinely better than what we are choosing; they were not worth giving up an
 independently usable API.
@@ -167,14 +172,14 @@ requirements, this is the obvious successor and should be reconsidered then.
 A single file, no server process, no connection configuration, and comfortably
 enough capacity for this data volume.
 
-It lost on the deployment model. M2 redeploys a freshly built image on every
-merge to `main`, and a SQLite database is a file on the host that the deployment
-must never lose — which turns it into a volume with careful lifecycle rules, and
-turns backup into copying a file consistently while it is open. Running Postgres
-as a separate service in the compose stack keeps the application container
-stateless and makes backup and restore an ordinary dump and load (#50, #51).
-SQLite's column typing is also by affinity rather than strict, which sits badly
-with a project that leans on static types as its primary automated check.
+It lost on operations and on typing. M2 redeploys a freshly built image on every
+merge to `main`, so the data has to survive outside the application container
+either way — Postgres does not escape needing a volume, and it would be
+dishonest to claim it does. What differs is the procedure around that volume:
+backing up and restoring Postgres is an ordinary dump and load (#50, #51), where
+the SQLite equivalent is copying a file consistently while a process holds it
+open. SQLite's column typing is also by affinity rather than strict, which sits
+badly with a project that leans on static types as its primary automated check.
 
 ### A separate repository for the backend
 
