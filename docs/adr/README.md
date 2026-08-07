@@ -7,9 +7,10 @@ still hold.
 
 ## Index
 
-| ADR                                       | Title                                                      | Status   | Date       |
-| ----------------------------------------- | ---------------------------------------------------------- | -------- | ---------- |
-| [0001](ADR-0001-typescript-react-vite.md) | Build the todo application with TypeScript, React and Vite | Accepted | 2026-08-07 |
+| ADR                                        | Title                                                                   | Status                                                   | Date       |
+| ------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
+| [0001](ADR-0001-typescript-react-vite.md)  | Build the todo application with TypeScript, React and Vite              | Superseded by [0002](ADR-0002-client-server-postgres.md) | 2026-08-07 |
+| [0002](ADR-0002-client-server-postgres.md) | Make the application client/server with Fastify, PostgreSQL and Drizzle | Accepted                                                 | 2026-08-07 |
 
 ## Writing one
 
@@ -30,7 +31,9 @@ Four sections, all of them required:
   decision.
 - **One decision per record.** If a record needs the word "also", it is two ADRs.
 - **Never delete a record.** When a decision is replaced, mark the old one
-  `Superseded by ADR-NNNN` and leave it in place. The history is the point.
+  `Superseded by ADR-NNNN` and leave it in place. The history is the point. When
+  only part of a record is replaced, add a `## Supersession` section to it saying
+  which part, and let the new record's Decision be the authority on the rest.
 - **Update this index** whenever a record is added or its status changes.
 
 ## What does not need an ADR

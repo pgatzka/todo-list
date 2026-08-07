@@ -1,8 +1,16 @@
 # ADR-0001: Build the todo application with TypeScript, React and Vite
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0002](ADR-0002-client-server-postgres.md)
 - **Date:** 2026-08-07
 - **Decided by:** Project owner (decision driver)
+
+## Supersession
+
+The supersession is partial. ADR-0002 replaces the client-only architecture and
+the browser-storage persistence described below; the toolchain chosen here
+largely carries forward, and ADR-0002's Decision is the authority on exactly
+which parts. The record is left as written, including the milestone plan that
+has since been reorganised.
 
 ## Context
 
