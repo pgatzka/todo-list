@@ -75,6 +75,21 @@ CASES: list[tuple[str, str, int]] = [
         ALLOW,
     ),
     ("commit inside a JSON payload", f'echo \'{{"cmd":"{GC} -m bad"}}\'', ALLOW),
+    # --- heredoc bodies are data, not shell syntax (issue #15) ------------
+    (
+        "prose heredoc mentioning a commit",
+        "cat > /tmp/pr.md <<'BODY'\n"
+        f"The guard's behaviour: run {GC} -m \"#1 x\" and it won't complain.\n"
+        "BODY",
+        ALLOW,
+    ),
+    (
+        "bare heredoc body with apostrophes",
+        "gh pr create --body-file - <<'EOF'\n"
+        f"Don't worry, {GC} isn't run here.\n"
+        "EOF",
+        ALLOW,
+    ),
     # --- pushes -----------------------------------------------------------
     ("force push to main", "git push --force origin main", BLOCK),
     ("force-with-lease to branch", "git push --force-with-lease origin 15-x", ALLOW),

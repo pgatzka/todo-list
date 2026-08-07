@@ -34,6 +34,13 @@ GIT_VALUE_FLAGS = frozenset(
 # Forms that reuse an already-validated message instead of supplying a new one.
 MESSAGE_REUSING_FLAGS = frozenset({"--no-edit", "-C", "--reuse-message", "--squash", "--fixup"})
 
+# A heredoc body is data, not shell syntax, so prose inside one routinely fails
+# to tokenise — an apostrophe in `<<'EOF' ... don't ... EOF` reads as an unclosed
+# quote. Bodies are lifted out before tokenising and put back only where a
+# message value needs them.
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\s*\2\b", re.S)
+PLACEHOLDER = "__HEREDOC_{}__"
+
 
 def deny(message: str) -> None:
     print(message, file=sys.stderr)
@@ -53,6 +60,18 @@ def current_branch() -> str:
 def branch_issue_number(branch: str) -> str | None:
     match = re.match(r"^(\d+)-", branch)
     return match.group(1) if match else None
+
+
+def lift_heredocs(command: str) -> tuple[str, dict[str, str]]:
+    """Replace heredoc bodies with placeholders, returning the bodies."""
+    bodies: dict[str, str] = {}
+
+    def replace(match: re.Match[str]) -> str:
+        key = PLACEHOLDER.format(len(bodies))
+        bodies[key] = match.group(3)
+        return f"<<{key}"
+
+    return HEREDOC.sub(replace, command), bodies
 
 
 def tokenize(command: str) -> list[str] | None:
@@ -77,10 +96,13 @@ def git_subcommand_args(tokens: list[str], subcommand: str) -> list[list[str]]:
     return found
 
 
-def first_line(value: str) -> str | None:
-    """First non-empty line of a message, unwrapping the heredoc form."""
+def first_line(value: str, bodies: dict[str, str]) -> str | None:
+    """First non-empty line of a message, restoring any lifted heredoc body."""
+    for key, body in bodies.items():
+        if key in value:
+            value = value.replace(key, body)
     # `-m "$(cat <<'EOF' ... EOF)"` survives tokenisation as one token.
-    value = re.sub(r"^\s*\$\(\s*cat\s*<<-?\s*[\"']?\w+[\"']?\s*", "", value)
+    value = re.sub(r"^\s*\$\(\s*cat\s*<<-?\s*[\"']?\w*[\"']?\s*", "", value)
     for line in value.splitlines():
         line = line.strip()
         if line:
@@ -88,18 +110,18 @@ def first_line(value: str) -> str | None:
     return None
 
 
-def commit_subject(args: list[str]) -> str | None:
+def commit_subject(args: list[str], bodies: dict[str, str]) -> str | None:
     """The subject line supplied to a commit, or None if none was."""
     for position, arg in enumerate(args):
         following = args[position + 1] if position + 1 < len(args) else None
 
         if arg in ("-m", "--message"):
-            return first_line(following) if following is not None else None
+            return first_line(following, bodies) if following is not None else None
         if arg.startswith("--message="):
-            return first_line(arg.split("=", 1)[1])
+            return first_line(arg.split("=", 1)[1], bodies)
         # -m"subject" collapses to a single -msubject token.
         if arg.startswith("-m") and not arg.startswith("--") and len(arg) > 2:
-            return first_line(arg[2:])
+            return first_line(arg[2:], bodies)
         # Combined short flags such as -am take their value as the next token.
         if (
             arg.startswith("-")
@@ -108,11 +130,11 @@ def commit_subject(args: list[str]) -> str | None:
             and arg[1:].isalpha()
             and "m" in arg[1:]
         ):
-            return first_line(following) if following is not None else None
+            return first_line(following, bodies) if following is not None else None
     return None
 
 
-def check_commit(args: list[str], branch: str, on_main: bool) -> None:
+def check_commit(args: list[str], branch: str, on_main: bool, bodies: dict[str, str]) -> None:
     if on_main:
         deny(
             "BLOCKED: you are on `main`, which is never worked on.\n"
@@ -122,10 +144,10 @@ def check_commit(args: list[str], branch: str, on_main: bool) -> None:
 
     if any(flag in MESSAGE_REUSING_FLAGS for flag in args):
         return
-    if "--amend" in args and commit_subject(args) is None:
+    if "--amend" in args and commit_subject(args, bodies) is None:
         return
 
-    subject = commit_subject(args)
+    subject = commit_subject(args, bodies)
     if subject is None:
         deny(
             "BLOCKED: commit without an inline -m message.\n"
@@ -194,13 +216,14 @@ def main() -> None:
     branch = current_branch()
     on_main = branch == "main"
 
-    tokens = tokenize(command)
+    lifted, bodies = lift_heredocs(command)
+    tokens = tokenize(lifted)
     if tokens is None:
         fallback_scan(command, branch, on_main)
         sys.exit(0)
 
     for args in git_subcommand_args(tokens, "commit"):
-        check_commit(args, branch, on_main)
+        check_commit(args, branch, on_main, bodies)
 
     for args in git_subcommand_args(tokens, "push"):
         check_push(args, on_main)
