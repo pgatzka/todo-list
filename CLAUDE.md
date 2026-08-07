@@ -84,30 +84,13 @@ Optional but encouraged: `priority/p0`–`p3`, `size/xs`–`xl`, `status/*`.
 
 ## Definition of Done
 
-An issue is not done until _all_ of the following hold:
-
-- [ ] The Definition of Done listed in the issue body is satisfied
-- [ ] `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` pass locally
-- [ ] New behaviour has tests; fixed bugs have a regression test
-- [ ] Documentation touched by the change is updated
-- [ ] Architectural decisions are recorded as an ADR under `docs/adr/`
-- [ ] Every commit on the branch is prefixed `#<nr>`
-- [ ] The PR body contains `Closes #<nr>`
-- [ ] CI is green
+An issue is not done until every line of the checklist in the `project-conventions` skill holds — the issue's own Definition of Done, the four local checks, tests, docs, ADRs, commit prefixes, `Closes #<nr>`, and green CI. The same list is enforced by the pull request template, the `code-reviewer` agent and `traceability.yml`.
 
 ---
 
 ## Stack
 
-| Concern       | Choice                         |
-| ------------- | ------------------------------ |
-| Language      | TypeScript, `strict: true`     |
-| UI            | React                          |
-| Build         | Vite                           |
-| Tests         | Vitest + React Testing Library |
-| E2E           | Playwright                     |
-| Lint / format | ESLint + Prettier              |
-| Runtime       | Node 24                        |
+The stack is `package.json`; the reasoning is [ADR-0001](docs/adr/ADR-0001-typescript-react-vite.md). End-to-end tests use Playwright, which is not in the manifest yet.
 
 Conventions:
 
@@ -118,47 +101,15 @@ Conventions:
 
 ---
 
-## Agents
+## Agents and commands
 
-Delegate to the specialist rather than doing everything inline. See `.claude/agents/`.
-
-| Agent             | Owns                                                               |
-| ----------------- | ------------------------------------------------------------------ |
-| `issue-manager`   | Issue creation, labels, milestones, sub-issue and dependency links |
-| `architect`       | Implementation design and ADRs, before code is written             |
-| `implementer`     | Writing the code on the issue branch                               |
-| `test-engineer`   | Tests and coverage, independent of the implementer                 |
-| `code-reviewer`   | Branch diff review and project-rule enforcement                    |
-| `docs-writer`     | README, ADRs, guides                                               |
-| `release-manager` | PRs, milestone closure, tags                                       |
-| `devops`          | GitHub Actions, branch protection, repo automation                 |
-| `ux-designer`     | Interface and interaction design, accessibility                    |
-
----
-
-## Commands
-
-| Command                | Does                                                         |
-| ---------------------- | ------------------------------------------------------------ |
-| `/issue <description>` | Find or create a properly labelled, milestoned, linked issue |
-| `/start <nr>`          | Branch off main for an issue and check it out                |
-| `/work <nr>`           | Full loop: architect → implement → test → review             |
-| `/ship <nr>`           | Verify, push and open the PR                                 |
-| `/board`               | Milestone and issue status overview                          |
-| `/groom`               | Sweep the backlog for missing labels, milestones and links   |
-| `/adr <title>`         | Draft a new architecture decision record                     |
+Delegate to the specialist rather than doing everything inline. The nine agents in `.claude/agents/` and the seven commands in `.claude/commands/` are already listed with their descriptions at the start of every session — read those, not a copy of them here.
 
 ---
 
 ## Guardrails
 
-Hooks in `.claude/settings.json` enforce these mechanically:
-
-- Commits on `main` are blocked
-- Commit messages without a `#<nr>` prefix are blocked
-- File edits while on `main` are blocked
-- Force pushes to `main` are blocked
-- Prettier runs on every edited file
+Hooks in `.claude/settings.json` block commits and edits that break the rules above.
 
 A blocked action is not a bug to work around. It means the process was skipped — go back and do the missing step.
 
