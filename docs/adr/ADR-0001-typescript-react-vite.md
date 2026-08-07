@@ -7,9 +7,10 @@
 ## Supersession
 
 The supersession is partial. ADR-0002 replaces the client-only architecture and
-the browser-storage persistence described below; the TypeScript, React, Vite,
-Vitest, Playwright and tooling choices carry forward unchanged. The record is
-left as written, including the milestone plan that has since been reorganised.
+the browser-storage persistence described below; the toolchain chosen here
+largely carries forward, and ADR-0002's Decision is the authority on exactly
+which parts. The record is left as written, including the milestone plan that
+has since been reorganised.
 
 ## Context
 

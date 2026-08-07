@@ -30,9 +30,9 @@ The forces that matter now:
   Filtering by status and by tag together, sorting by due date, priority and
   creation time, and finding todos by text are operations a relational engine
   performs against indexes. In the browser they are array scans whose
-  correctness depends on all of the data having been loaded. Whether M3
-  actually runs them on the server or in the client is not settled here — #59
-  requires that choice be made and recorded in its own pull request.
+  correctness depends on all of the data having been loaded. Where M3 actually
+  runs each of them is not settled here; for search, #59 requires the choice be
+  made and recorded in its own pull request.
 - **The richer todo wants constraints the store can enforce.** Priorities from a
   fixed set, timestamps stored unambiguously, tags related to todos in a defined
   way. A store that enforces types, nullability, defaults and referential
@@ -81,8 +81,8 @@ What this makes easy:
   this. The browser holds a view of the data instead of owning it.
 - The M3 filtering, sorting and search work can run as SQL against indexes
   rather than as client-side array scans, and stay correct as the list grows
-  past whatever a first page loads. Where each of them actually runs is #59's
-  decision, not this one's.
+  past whatever a first page loads. Which of them actually do is left to M3,
+  and for search specifically to #59.
 - Drizzle's schema is ordinary TypeScript, so column types flow into the server's
   types without a code generation step, and `drizzle-kit` emits plain SQL
   migrations that are reviewed as SQL in the pull request that adds them.
@@ -148,8 +148,9 @@ there is no hand-written contract to drift at all.
 It lost on a requirement, not on ergonomics: the epic (#20) states the API has to
 be reachable and documented independently of the UI. tRPC's transport is an
 implementation detail rather than an interface — awkward to call with `curl`, and
-it does not let the error contract be authored in HTTP status codes, which is how
-#31 states it. It would also couple the frontend build to the server's
+the error contract would land in tRPC's own envelope rather than in the single
+documented shape #31 asks for. It would also couple the frontend build to the
+server's
 source tree and to a single TypeScript version across both. The inferred types
 are genuinely better than what we are choosing; they were not worth giving up an
 independently usable API.
@@ -159,7 +160,7 @@ independently usable API.
 One framework covering both halves, with route handlers, server rendering and a
 build that emits both sides.
 
-It lost because it replaces the ADR-0001 frontend instead of extending it. The
+It lost because it replaces the ADR-0001 frontend instead of building on it. The
 Vite configuration, the Vitest transform pipeline that shares it and the existing
 application would all be migrated, and the return is mostly server rendering,
 which #33 explicitly puts out of scope. It also makes the framework the
@@ -174,12 +175,16 @@ enough capacity for this data volume.
 
 It lost on operations and on typing. M2 redeploys a freshly built image on every
 merge to `main`, so the data has to survive outside the application container
-either way — Postgres does not escape needing a volume, and it would be
-dishonest to claim it does. What differs is the procedure around that volume:
-backing up and restoring Postgres is an ordinary dump and load (#50, #51), where
-the SQLite equivalent is copying a file consistently while a process holds it
-open. SQLite's column typing is also by affinity rather than strict, which sits
-badly with a project that leans on static types as its primary automated check.
+either way; Postgres needs a volume just as much. Both engines also have a real
+online backup — `pg_dump` on one side, `.dump` and `VACUUM INTO` on the other.
+What differs is where the procedure runs. `pg_dump` speaks to a service over a
+connection, so the backup job (#50) and the restore drill (#51) are the same
+whether they run on the host, in CI or from a workstation. Every SQLite backup
+path needs the file and a `sqlite3` binary next to the volume, and the obvious
+wrong version — `cp` of a database in WAL mode — silently produces a file that
+restores to a torn state. SQLite's column typing is also by affinity rather than
+strict, which sits badly with a project that leans on static types as its primary
+automated check.
 
 ### A separate repository for the backend
 
