@@ -1,0 +1,90 @@
+name: Traceability
+
+on:
+  pull_request:
+    # `edited` matters: the closing keyword lives in the PR body, and a body edit
+    # is otherwise invisible to CI.
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: traceability-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Issue link, branch name, commit prefixes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Verify traceability
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script, so a PR body can never inject shell.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -uo pipefail
+          FAILED=0
+          fail() { echo "::error::$1"; FAILED=1; }
+
+          # ---- 1. The branch names its issue -------------------------------
+          if [[ ! "$BRANCH" =~ ^([0-9]+)- ]]; then
+            fail "Branch '$BRANCH' does not match '<issue-nr>-<kebab-title>'."
+            echo "Cannot check anything else without an issue number."
+            exit 1
+          fi
+          ISSUE="${BASH_REMATCH[1]}"
+          echo "Branch declares issue #$ISSUE"
+
+          # ---- 2. The body closes that issue -------------------------------
+          # Without a closing keyword the issue stays open after merge, and the
+          # link that makes the work traceable exists only in someone's memory.
+          if ! grep -qiE "(close[sd]?|fix(e[sd])?|resolve[sd]?) +#${ISSUE}\b" <<<"$PR_BODY"; then
+            fail "PR body must contain 'Closes #${ISSUE}'. Found no closing keyword for that issue."
+          else
+            echo "Body closes #$ISSUE"
+          fi
+
+          # ---- 3. The title carries the prefix -----------------------------
+          if [[ ! "$PR_TITLE" =~ ^#${ISSUE}\  ]]; then
+            fail "PR title must start with '#${ISSUE} '. Got: '$PR_TITLE'"
+          else
+            echo "Title prefixed #$ISSUE"
+          fi
+
+          # ---- 4. Every commit traces back ---------------------------------
+          BAD=0
+          while IFS= read -r subject; do
+            [[ -z "$subject" ]] && continue
+            # Merge commits from an updated base are not authored by this branch.
+            [[ "$subject" =~ ^Merge\  ]] && continue
+            if [[ ! "$subject" =~ ^#${ISSUE}\ [^[:space:]] ]]; then
+              echo "::error::Commit subject must start with '#${ISSUE} ': $subject"
+              BAD=1
+            fi
+          done < <(git log --no-merges --format='%s' "${BASE_SHA}..${HEAD_SHA}")
+
+          if [[ "$BAD" == "1" ]]; then
+            FAILED=1
+          else
+            echo "All commit subjects prefixed #$ISSUE"
+          fi
+
+          if [[ "$FAILED" == "1" ]]; then
+            echo ""
+            echo "Traceability rules are documented in CLAUDE.md."
+            exit 1
+          fi
+          echo ""
+          echo "Traceability OK."
