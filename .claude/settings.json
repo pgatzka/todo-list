@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.py\"",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-guard.sh\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.py\"",
             "timeout": 10
           }
         ]
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-edit.py\"",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-guard.sh\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-edit.py\"",
             "timeout": 10
           }
         ]
