@@ -7,9 +7,10 @@ still hold.
 
 ## Index
 
-| ADR                                       | Title                                                      | Status   | Date       |
-| ----------------------------------------- | ---------------------------------------------------------- | -------- | ---------- |
-| [0001](ADR-0001-typescript-react-vite.md) | Build the todo application with TypeScript, React and Vite | Accepted | 2026-08-07 |
+| ADR                                        | Title                                                                   | Status                                                   | Date       |
+| ------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
+| [0001](ADR-0001-typescript-react-vite.md)  | Build the todo application with TypeScript, React and Vite              | Superseded by [0002](ADR-0002-client-server-postgres.md) | 2026-08-07 |
+| [0002](ADR-0002-client-server-postgres.md) | Make the application client/server with Fastify, PostgreSQL and Drizzle | Accepted                                                 | 2026-08-07 |
 
 ## Writing one
 
