@@ -1,6 +1,6 @@
 # todo-list
 
-A todo application built with TypeScript, React and Vite. **Every line of this project is implemented by Claude Code.** The user is the customer and the decision driver: they decide *what* and *why*, Claude decides *how* and does the work.
+A todo application built with TypeScript, React and Vite. **Every line of this project is implemented by Claude Code.** The user is the customer and the decision driver: they decide _what_ and _why_, Claude decides _how_ and does the work.
 
 ---
 
@@ -12,7 +12,7 @@ When the user asks for anything that touches the repository:
 
 1. **Search first.** `gh issue list --search "<keywords>" --state all` — does an issue already cover this?
 2. **If yes**, work that issue.
-3. **If no**, create one *before* touching a file. Assign a milestone, apply labels, link it to related issues.
+3. **If no**, create one _before_ touching a file. Assign a milestone, apply labels, link it to related issues.
 4. **Then** branch, implement, commit, PR.
 
 There is no step where code is written against no issue. If the user asks for something small, it still gets an issue — a `size/xs` issue is cheap, an untraceable commit is not.
@@ -84,7 +84,7 @@ Optional but encouraged: `priority/p0`–`p3`, `size/xs`–`xl`, `status/*`.
 
 ## Definition of Done
 
-An issue is not done until *all* of the following hold:
+An issue is not done until _all_ of the following hold:
 
 - [ ] The Definition of Done listed in the issue body is satisfied
 - [ ] `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` pass locally
@@ -99,15 +99,15 @@ An issue is not done until *all* of the following hold:
 
 ## Stack
 
-| Concern | Choice |
-| --- | --- |
-| Language | TypeScript, `strict: true` |
-| UI | React |
-| Build | Vite |
-| Tests | Vitest + React Testing Library |
-| E2E | Playwright |
-| Lint / format | ESLint + Prettier |
-| Runtime | Node 24 |
+| Concern       | Choice                         |
+| ------------- | ------------------------------ |
+| Language      | TypeScript, `strict: true`     |
+| UI            | React                          |
+| Build         | Vite                           |
+| Tests         | Vitest + React Testing Library |
+| E2E           | Playwright                     |
+| Lint / format | ESLint + Prettier              |
+| Runtime       | Node 24                        |
 
 Conventions:
 
@@ -122,31 +122,31 @@ Conventions:
 
 Delegate to the specialist rather than doing everything inline. See `.claude/agents/`.
 
-| Agent | Owns |
-| --- | --- |
-| `issue-manager` | Issue creation, labels, milestones, sub-issue and dependency links |
-| `architect` | Implementation design and ADRs, before code is written |
-| `implementer` | Writing the code on the issue branch |
-| `test-engineer` | Tests and coverage, independent of the implementer |
-| `code-reviewer` | Branch diff review and project-rule enforcement |
-| `docs-writer` | README, ADRs, guides |
-| `release-manager` | PRs, milestone closure, tags |
-| `devops` | GitHub Actions, branch protection, repo automation |
-| `ux-designer` | Interface and interaction design, accessibility |
+| Agent             | Owns                                                               |
+| ----------------- | ------------------------------------------------------------------ |
+| `issue-manager`   | Issue creation, labels, milestones, sub-issue and dependency links |
+| `architect`       | Implementation design and ADRs, before code is written             |
+| `implementer`     | Writing the code on the issue branch                               |
+| `test-engineer`   | Tests and coverage, independent of the implementer                 |
+| `code-reviewer`   | Branch diff review and project-rule enforcement                    |
+| `docs-writer`     | README, ADRs, guides                                               |
+| `release-manager` | PRs, milestone closure, tags                                       |
+| `devops`          | GitHub Actions, branch protection, repo automation                 |
+| `ux-designer`     | Interface and interaction design, accessibility                    |
 
 ---
 
 ## Commands
 
-| Command | Does |
-| --- | --- |
+| Command                | Does                                                         |
+| ---------------------- | ------------------------------------------------------------ |
 | `/issue <description>` | Find or create a properly labelled, milestoned, linked issue |
-| `/start <nr>` | Branch off main for an issue and check it out |
-| `/work <nr>` | Full loop: architect → implement → test → review |
-| `/ship <nr>` | Verify, push and open the PR |
-| `/board` | Milestone and issue status overview |
-| `/groom` | Sweep the backlog for missing labels, milestones and links |
-| `/adr <title>` | Draft a new architecture decision record |
+| `/start <nr>`          | Branch off main for an issue and check it out                |
+| `/work <nr>`           | Full loop: architect → implement → test → review             |
+| `/ship <nr>`           | Verify, push and open the PR                                 |
+| `/board`               | Milestone and issue status overview                          |
+| `/groom`               | Sweep the backlog for missing labels, milestones and links   |
+| `/adr <title>`         | Draft a new architecture decision record                     |
 
 ---
 

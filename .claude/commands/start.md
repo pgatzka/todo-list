@@ -27,10 +27,12 @@ Start work on issue #$1.
 2. **Make sure the tree is clean.** Uncommitted changes belong to whatever came before; do not drag them onto a new branch.
 
 3. **Branch from an up-to-date main:**
+
    ```bash
    git checkout main && git pull
    git checkout -b $1-<kebab-case-title>
    ```
+
    The slug comes from the issue title: lowercase, hyphens, no punctuation, trimmed to something readable.
 
 4. **Report** the branch name, the Definition of Done to be satisfied, and the reminder that commits on this branch start with `#$1 `.

@@ -25,7 +25,7 @@ Delegate to `architect` for the reasoning and `docs-writer` for the record.
 3. **Write it** from `docs/adr/template.md`:
    - **Context** — the forces at play, stated so a reader understands why this was even a question
    - **Decision** — what is chosen, active voice
-   - **Consequences** — what this makes easy *and* what it makes hard; the downsides are the point
+   - **Consequences** — what this makes easy _and_ what it makes hard; the downsides are the point
    - **Alternatives considered** — each with the specific reason it lost
 
 4. **Status is `Proposed`.** The user is the decision driver. Present the recommendation and wait for approval before marking it `Accepted` — and before any code implements it.
