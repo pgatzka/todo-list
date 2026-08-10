@@ -16,6 +16,7 @@ commit command in the source would trip the very rule under test.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -103,13 +104,14 @@ CASES: list[tuple[str, str, int]] = [
 ]
 
 
-def run(script: Path, payload: dict, cwd: Path | None = None) -> int:
+def run(script: Path, payload: dict, cwd: Path | None = None, env: dict | None = None) -> int:
     return subprocess.run(
         [sys.executable, str(script)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
         cwd=None if cwd is None else str(cwd),
+        env=None if env is None else {**os.environ, **env},
     ).returncode
 
 
@@ -119,16 +121,31 @@ def make_main_repo(parent: Path) -> Path:
     guard-edit.py short-circuits to ALLOW off main, so its path-scope rule can
     only be exercised from a working tree that is genuinely on main. The guard is
     copied to its real relative location inside that tree because it derives the
-    repository root from its own path. An unborn `main` is enough for
-    `git branch --show-current`, so no commit is needed.
+    repository root from its own path, and is then committed so that the tracked
+    and untracked cases really are what their names say.
+
+    Identity, signing and hooks are pinned so the fixture does not inherit the
+    developer's global git config. Per this file's header, the commit is issued
+    as an argv list assembled from fragments rather than a literal command
+    string.
     """
     repo = parent / "todo-list"
     (repo / ".claude" / "hooks").mkdir(parents=True)
     shutil.copy(GUARD_EDIT, repo / ".claude" / "hooks" / GUARD_EDIT.name)
     (repo / "src").mkdir()
+    identity = [
+        "-c",
+        "user.name=guard fixture",
+        "-c",
+        "user.email=guard@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+    ]
     for args in (
         ["init", "--quiet", str(repo)],
         ["-C", str(repo), "symbolic-ref", "HEAD", "refs/heads/main"],
+        ["-C", str(repo), "add", ".claude"],
+        ["-C", str(repo), *identity, COMMIT, "--quiet", "--no-verify", "-m", f"#{ISSUE} Fixture"],
     ):
         subprocess.run(["git", *args], check=True, capture_output=True, text=True)
     return repo
@@ -210,7 +227,9 @@ def main() -> int:
             print(f"  {'pass' if ok else 'FAIL'}  exp={expected} got={actual}  {name}")
 
         # A copy sitting outside any working tree cannot discover a root, which
-        # is the fail-closed case: undecidable means block, not allow.
+        # is the fail-closed case: undecidable means block, not allow. The
+        # ceiling stops git's upward search at the temp directory, so the case
+        # holds even for a developer whose TMPDIR sits inside a checkout.
         loose = Path(temp) / "loose"
         loose.mkdir()
         shutil.copy(GUARD_EDIT, loose / GUARD_EDIT.name)
@@ -218,6 +237,7 @@ def main() -> int:
             loose / GUARD_EDIT.name,
             {"tool_input": {"file_path": str(outside / "x.md")}, "cwd": str(repo)},
             cwd=repo,
+            env={"GIT_CEILING_DIRECTORIES": temp},
         )
         ok = actual == BLOCK
         failures += not ok
