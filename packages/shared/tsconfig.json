@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Consumed as built output rather than source: the emitted dist is what a
+    // running `node dist/index.js` in another workspace resolves to.
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "moduleResolution": "bundler"
+  },
+  "include": ["src"]
+}
