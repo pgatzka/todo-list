@@ -19,6 +19,7 @@ import json
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HOOKS = Path(__file__).resolve().parent
@@ -102,13 +103,50 @@ CASES: list[tuple[str, str, int]] = [
 ]
 
 
-def run(script: Path, payload: dict) -> int:
+def run(script: Path, payload: dict, cwd: Path | None = None) -> int:
     return subprocess.run(
         [sys.executable, str(script)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
+        cwd=None if cwd is None else str(cwd),
     ).returncode
+
+
+def make_main_repo(parent: Path) -> Path:
+    """A throwaway repository whose checked-out branch really is `main`.
+
+    guard-edit.py short-circuits to ALLOW off main, so its path-scope rule can
+    only be exercised from a working tree that is genuinely on main. The guard is
+    copied to its real relative location inside that tree because it derives the
+    repository root from its own path. An unborn `main` is enough for
+    `git branch --show-current`, so no commit is needed.
+    """
+    repo = parent / "todo-list"
+    (repo / ".claude" / "hooks").mkdir(parents=True)
+    shutil.copy(GUARD_EDIT, repo / ".claude" / "hooks" / GUARD_EDIT.name)
+    (repo / "src").mkdir()
+    for args in (
+        ["init", "--quiet", str(repo)],
+        ["-C", str(repo), "symbolic-ref", "HEAD", "refs/heads/main"],
+    ):
+        subprocess.run(["git", *args], check=True, capture_output=True, text=True)
+    return repo
+
+
+def edit_scope_cases(repo: Path, outside: Path) -> list[tuple[str, str, int]]:
+    """Path-scope cases judged from a working tree that is on `main`."""
+    return [
+        ("tracked path inside the tree", str(repo / ".claude" / "hooks" / "guard-edit.py"), BLOCK),
+        ("untracked path inside the tree", str(repo / "src" / "App.tsx"), BLOCK),
+        ("relative path inside the tree", "src/App.tsx", BLOCK),
+        ("absolute path outside the tree", str(outside / "autonomy-boundary.md"), ALLOW),
+        ("relative path escaping the tree", "../outside/autonomy-boundary.md", ALLOW),
+        ("relative path escaping and returning", "../todo-list/src/App.tsx", BLOCK),
+        # A string prefix check would call this one inside the tree.
+        ("sibling whose name extends the root", str(repo.parent / "todo-list-notes" / "x.md"), ALLOW),
+        ("allowlisted path stays editable", str(repo / ".claude" / "settings.local.json"), ALLOW),
+    ]
 
 
 # Resolved while PATH is still intact: the no-interpreter case blanks PATH, which
@@ -146,6 +184,34 @@ def main() -> int:
     failures += not ok
     print(f"  {'pass' if ok else 'FAIL'}  exp={ALLOW} got={actual}  edit allowed off main")
 
+    print("\nguard-edit.py — path scope on main (issue #72)")
+    with tempfile.TemporaryDirectory() as temp:
+        repo = make_main_repo(Path(temp))
+        outside = Path(temp) / "outside"
+        outside.mkdir()
+        guard = repo / ".claude" / "hooks" / GUARD_EDIT.name
+        scope_cases = edit_scope_cases(repo, outside)
+        for name, file_path, expected in scope_cases:
+            payload = {"tool_input": {"file_path": file_path}, "cwd": str(repo)}
+            actual = run(guard, payload, cwd=repo)
+            ok = actual == expected
+            failures += not ok
+            print(f"  {'pass' if ok else 'FAIL'}  exp={expected} got={actual}  {name}")
+
+        # A copy sitting outside any working tree cannot discover a root, which
+        # is the fail-closed case: undecidable means block, not allow.
+        loose = Path(temp) / "loose"
+        loose.mkdir()
+        shutil.copy(GUARD_EDIT, loose / GUARD_EDIT.name)
+        actual = run(
+            loose / GUARD_EDIT.name,
+            {"tool_input": {"file_path": str(outside / "x.md")}, "cwd": str(repo)},
+            cwd=repo,
+        )
+        ok = actual == BLOCK
+        failures += not ok
+        print(f"  {'pass' if ok else 'FAIL'}  exp={BLOCK} got={actual}  undiscoverable root fails closed")
+
     print("\nrun-guard.sh — fail-closed behaviour")
     checks = [
         ("valid command still allowed", GUARD_BASH, {"tool_input": {"command": "npm test"}}, None, ALLOW),
@@ -160,7 +226,7 @@ def main() -> int:
         failures += not ok
         print(f"  {'pass' if ok else 'FAIL'}  exp={expected} got={actual}  {name}")
 
-    total = len(CASES) + 1 + len(checks)
+    total = len(CASES) + 1 + len(scope_cases) + 1 + len(checks)
     print(f"\n{total - failures}/{total} passed")
     return 1 if failures else 0
 
