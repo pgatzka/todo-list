@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./dist/tsconfig.app.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    // Relative imports are written with the `.ts` extension and rewritten to
+    // `.js` on emit. That is what lets `node --watch src/index.ts` run the
+    // sources through Node's type stripping and `node dist/index.js` run the
+    // build, with no extra runtime dependency. It requires the source stay
+    // erasable, which `erasableSyntaxOnly` in the base config enforces.
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src"],
+  "references": [{ "path": "../shared" }]
+}

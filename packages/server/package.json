@@ -1,0 +1,16 @@
+{
+  "name": "@todo/server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "build": "tsc -b",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@todo/shared": "*",
+    "fastify": "^5.11.3"
+  }
+}

@@ -47,6 +47,11 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  // The server is a Node process.
+  {
+    files: ['packages/server/**/*.ts'],
+    languageOptions: { globals: globals.node },
+  },
   // Test files legitimately do things the strict rules flag: asserting on
   // promises, building deliberately malformed input, and reaching for non-null
   // assertions on values a test has just created.
