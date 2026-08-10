@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """PreToolUse guard for Edit / Write / NotebookEdit.
 
-Blocks any file modification while `main` is checked out. Work belongs on an
-issue branch; `main` only ever receives merges via pull request.
+Blocks modification of files inside this repository while `main` is checked out.
+Work belongs on an issue branch; `main` only ever receives merges via pull
+request.
+
+Paths outside the working tree — agent memory under `~/.claude`, scratch files
+in `/tmp` — are none of that rule's business: they have no commit to belong to,
+so no branch can gate them. They are left alone.
 
 Exit code 2 denies the tool call and feeds stderr back to Claude.
 """
@@ -10,6 +15,7 @@ Exit code 2 denies the tool call and feeds stderr back to Claude.
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 # Editing these while on main is harmless and sometimes necessary (for example
 # a scratch note before an issue exists).
@@ -26,6 +32,48 @@ def current_branch() -> str:
     return result.stdout.strip()
 
 
+def repository_root() -> Path | None:
+    """The working tree this guard defends, or None when it cannot be found.
+
+    Derived from the guard's own location — it lives at `<root>/.claude/hooks/`
+    — rather than from the payload's cwd, which may point anywhere on the
+    filesystem and would make git report a different repository or none at all.
+    git confirms the directory really is a working tree and canonicalises it.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(Path(__file__).resolve().parent), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    root = result.stdout.strip()
+    if result.returncode != 0 or not root:
+        return None
+    return Path(root).resolve()
+
+
+def inside_repository(path: str, cwd: str) -> bool:
+    """Whether `path` lands inside the working tree.
+
+    Both sides are resolved before comparison, so symlinks and `..` segments are
+    judged by where they actually point, and the comparison is by path component
+    rather than by string prefix — `todo-list-notes` is not inside `todo-list`.
+
+    Fails closed: an undiscoverable root or an unresolvable path counts as
+    inside, because a guard that cannot tell must block rather than wave through.
+    """
+    root = repository_root()
+    if root is None:
+        return True
+    try:
+        # A relative file_path is relative to the session's cwd, which is not
+        # necessarily the repository root.
+        base = Path(cwd) if cwd else Path.cwd()
+        return (base / path).resolve().is_relative_to(root)
+    except (OSError, ValueError, RuntimeError):
+        return True
+
+
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
@@ -37,6 +85,9 @@ def main() -> None:
 
     path = payload.get("tool_input", {}).get("file_path", "")
     if any(path.endswith(suffix) for suffix in ALLOWED_ON_MAIN):
+        sys.exit(0)
+
+    if not inside_repository(path, payload.get("cwd", "")):
         sys.exit(0)
 
     print(
