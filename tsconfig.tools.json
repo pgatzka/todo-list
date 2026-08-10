@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tools.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  // ESLint's project service resolves a file through the nearest tsconfig, so
+  // every .ts file in the repository has to belong to some project — including
+  // the root Vitest config, which no package includes.
+  "include": ["vitest.config.ts"]
+}
