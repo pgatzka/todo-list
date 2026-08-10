@@ -27,16 +27,16 @@ function importsEscapingThisPackage(): readonly string[] {
   });
 }
 
-// Structural: these assert how the web workspace reaches the shared package, not
-// what the shared package contains. Superseded once the client actually consumes
-// the API types (#34).
-describe('@todo/shared from the web workspace', () => {
+// Structural: these assert how the server workspace reaches the shared package,
+// not what the shared package contains. Superseded once the routes actually type
+// their payloads with it (#30).
+describe('@todo/shared from the server workspace', () => {
   // A compile-time assertion. Vitest strips the type import, so this test is
   // enforced by `npm run typecheck`, not by the test run.
   it('supplies the Todo type under its package name', () => {
     const todo: Todo = { id: '1', title: 'Buy milk', completed: false };
 
-    expect(todo.completed).toBe(false);
+    expect(todo.title).toBe('Buy milk');
   });
 
   // The counterpart that the type import cannot make: an erased import proves
