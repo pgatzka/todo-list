@@ -134,18 +134,30 @@ def make_main_repo(parent: Path) -> Path:
     return repo
 
 
-def edit_scope_cases(repo: Path, outside: Path) -> list[tuple[str, str, int]]:
-    """Path-scope cases judged from a working tree that is on `main`."""
+def edit_scope_cases(repo: Path, outside: Path) -> list[tuple[str, dict, int]]:
+    """Path-scope cases judged from a working tree that is on `main`.
+
+    Each case is run with the process cwd at the fixture root, which is where a
+    relative `file_path` really resolves. The payload's own `cwd` field is varied
+    deliberately: the guard must not take routing advice from it.
+    """
+
+    def case(name: str, file_path: str, expected: int, cwd: Path = repo) -> tuple[str, dict, int]:
+        return name, {"tool_input": {"file_path": file_path}, "cwd": str(cwd)}, expected
+
     return [
-        ("tracked path inside the tree", str(repo / ".claude" / "hooks" / "guard-edit.py"), BLOCK),
-        ("untracked path inside the tree", str(repo / "src" / "App.tsx"), BLOCK),
-        ("relative path inside the tree", "src/App.tsx", BLOCK),
-        ("absolute path outside the tree", str(outside / "autonomy-boundary.md"), ALLOW),
-        ("relative path escaping the tree", "../outside/autonomy-boundary.md", ALLOW),
-        ("relative path escaping and returning", "../todo-list/src/App.tsx", BLOCK),
+        case("tracked path inside the tree", str(repo / ".claude" / "hooks" / "guard-edit.py"), BLOCK),
+        case("untracked path inside the tree", str(repo / "src" / "App.tsx"), BLOCK),
+        case("relative path inside the tree", "src/App.tsx", BLOCK),
+        case("absolute path outside the tree", str(outside / "autonomy-boundary.md"), ALLOW),
+        case("relative path escaping the tree", "../outside/autonomy-boundary.md", ALLOW),
+        case("relative path escaping and returning", "../todo-list/src/App.tsx", BLOCK),
         # A string prefix check would call this one inside the tree.
-        ("sibling whose name extends the root", str(repo.parent / "todo-list-notes" / "x.md"), ALLOW),
-        ("allowlisted path stays editable", str(repo / ".claude" / "settings.local.json"), ALLOW),
+        case("sibling whose name extends the root", str(repo.parent / "todo-list-notes" / "x.md"), ALLOW),
+        case("allowlisted path stays editable", str(repo / ".claude" / "settings.local.json"), ALLOW),
+        # A payload that claims to live elsewhere must not turn an in-tree edit
+        # into an out-of-tree one.
+        case("payload cwd outside the tree is ignored", "src/App.tsx", BLOCK, cwd=outside),
     ]
 
 
@@ -191,8 +203,7 @@ def main() -> int:
         outside.mkdir()
         guard = repo / ".claude" / "hooks" / GUARD_EDIT.name
         scope_cases = edit_scope_cases(repo, outside)
-        for name, file_path, expected in scope_cases:
-            payload = {"tool_input": {"file_path": file_path}, "cwd": str(repo)}
+        for name, payload, expected in scope_cases:
             actual = run(guard, payload, cwd=repo)
             ok = actual == expected
             failures += not ok

@@ -52,12 +52,17 @@ def repository_root() -> Path | None:
     return Path(root).resolve()
 
 
-def inside_repository(path: str, cwd: str) -> bool:
+def inside_repository(path: str) -> bool:
     """Whether `path` lands inside the working tree.
 
     Both sides are resolved before comparison, so symlinks and `..` segments are
     judged by where they actually point, and the comparison is by path component
     rather than by string prefix — `todo-list-notes` is not inside `todo-list`.
+
+    A relative path resolves against the process cwd, which is the session
+    directory the Edit tool itself resolves against. The payload's `cwd` field
+    would be the same directory, but it travels with the tool call and so could
+    contradict it; a guard must not take routing advice from what it is judging.
 
     Fails closed: an undiscoverable root or an unresolvable path counts as
     inside, because a guard that cannot tell must block rather than wave through.
@@ -66,10 +71,7 @@ def inside_repository(path: str, cwd: str) -> bool:
     if root is None:
         return True
     try:
-        # A relative file_path is relative to the session's cwd, which is not
-        # necessarily the repository root.
-        base = Path(cwd) if cwd else Path.cwd()
-        return (base / path).resolve().is_relative_to(root)
+        return (Path.cwd() / path).resolve().is_relative_to(root)
     except (OSError, ValueError, RuntimeError):
         return True
 
@@ -87,7 +89,7 @@ def main() -> None:
     if any(path.endswith(suffix) for suffix in ALLOWED_ON_MAIN):
         sys.exit(0)
 
-    if not inside_repository(path, payload.get("cwd", "")):
+    if not inside_repository(path):
         sys.exit(0)
 
     print(
